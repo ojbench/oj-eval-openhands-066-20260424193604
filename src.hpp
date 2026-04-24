@@ -6,6 +6,7 @@
 #include <typeindex>
 #include <memory>
 #include <unordered_map>
+#include <type_traits>
 
 namespace sjtu {
 
@@ -158,14 +159,21 @@ any_ptr make_any_ptr(const T &t) {
     return any_ptr(std::make_shared<any_ptr::holder<T>>(t));
 }
 
-template <class T, class... Args>
-any_ptr make_any_ptr(Args&&... args) {
-    return any_ptr(std::make_shared<any_ptr::holder<T>>(std::forward<Args>(args)...));
-}
-
 template <class T>
 any_ptr make_any_ptr(std::initializer_list<typename T::value_type> il) {
     return any_ptr(std::make_shared<any_ptr::holder<T>>(il));
+}
+
+// Specialization for std::vector to handle the case of make_any_ptr<std::vector<T>>(args...)
+template <class T, class... Args>
+any_ptr make_any_ptr(Args&&... args) {
+    if constexpr (std::is_same_v<T, std::vector<std::common_type_t<Args...>>>) {
+        // For vector, we need to create a vector with the given arguments
+        T vec = {std::forward<Args>(args)...};
+        return any_ptr(std::make_shared<any_ptr::holder<T>>(std::move(vec)));
+    } else {
+        return any_ptr(std::make_shared<any_ptr::holder<T>>(std::forward<Args>(args)...));
+    }
 }
 
 }  // namespace sjtu
