@@ -170,7 +170,11 @@ any_ptr make_any_ptr(std::initializer_list<typename T::value_type> il) {
 // Specialization for std::vector to handle the case of make_any_ptr<std::vector<T>>(args...)
 template <class T, class... Args>
 any_ptr make_any_ptr(Args&&... args) {
-    if constexpr (std::is_same_v<T, std::vector<std::common_type_t<Args...>>>) {
+    if constexpr (sizeof...(Args) == 0) {
+        // Handle empty parameter pack
+        T vec;
+        return any_ptr(std::make_shared<any_ptr::holder<T>>(std::move(vec)));
+    } else if constexpr (std::is_same_v<T, std::vector<std::common_type_t<Args...>>>) {
         // For vector, we need to create a vector with the given arguments
         T vec;
         (vec.push_back(std::forward<Args>(args)), ...);
