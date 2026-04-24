@@ -38,6 +38,20 @@ private:
 
     std::shared_ptr<base_holder> ptr;
 
+    // Private constructor for internal use by make_any_ptr
+    template<typename T>
+    any_ptr(std::shared_ptr<holder<T>> h) : ptr(h) {}
+
+    // Make make_any_ptr functions friends so they can access private members
+    template <class T>
+    friend any_ptr make_any_ptr(const T &t);
+    
+    template <class T, class... Args>
+    friend any_ptr make_any_ptr(Args&&... args);
+    
+    template <class T>
+    friend any_ptr make_any_ptr(std::initializer_list<typename T::value_type> il);
+
 public:
     /**
      * @brief 默认构造函数，行为应与创建空指针类似
